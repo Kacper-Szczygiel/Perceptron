@@ -97,15 +97,18 @@ public class Perceptron
         }
     }
     
-    public void TestRecord(Data data)
+    public void Test(List<Data> testSet)
     {
-        int y = Delta(data, WeightVector, T, TypesDict);
-            
-        foreach (var entry in TypesDict)
+        foreach (var testData in testSet)
         {
-            if (entry.Value == y)
+            int y = Delta(testData, WeightVector, T, TypesDict);
+            
+            foreach (var entry in TypesDict)
             {
-                data.PredictedType = entry.Key;
+                if (entry.Value == y)
+                {
+                    testData.PredictedType = entry.Key;
+                }
             }
         }
     }

@@ -15,11 +15,7 @@ public class Program
 
         Perceptron perceptron = new Perceptron(trainSet);
         perceptron.Learn(trainSet, a);
-        
-        foreach (var testData in testSet)
-        {
-            perceptron.TestRecord(testData);
-        }
+        perceptron.Test(testSet);
 
         Console.WriteLine("Vectors;CorrectType;PredictedType");
         PrintList(testSet);
