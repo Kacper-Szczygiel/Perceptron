@@ -12,16 +12,13 @@ public class Program
 
         List<Data> trainSet = FileToList(trainSetName);
         List<Data> testSet = FileToList(testSetName);
-        
-        List<double> weightVector = AssignRandomValuesToWeightVector(trainSet.ElementAt(0).Vectors.Count);
-        double t = GetPseudoDoubleWithinRange(-5, 5);
-        Dictionary<string, int> typeDict = CreateTypesDict(trainSet);
 
-        Learn(trainSet, a, weightVector, t, typeDict);
+        Perceptron perceptron = new Perceptron(trainSet);
+        perceptron.Learn(trainSet, a);
         
         foreach (var testData in testSet)
         {
-            TestRecord(testData, weightVector, t, typeDict);
+            perceptron.TestRecord(testData);
         }
 
         Console.WriteLine("Vectors;CorrectType;PredictedType");
@@ -29,7 +26,7 @@ public class Program
         
         Console.WriteLine("Accuracy: {0:P2}.", CalculateAccuracy(testSet));
 
-        foreach (var entry in typeDict)
+        foreach (var entry in perceptron.TypesDict)
         {
             Console.WriteLine(entry.Key + " accuracy : {0:P2}.", CalculateAccuracy(testSet, entry.Key));
         }
@@ -42,9 +39,9 @@ public class Program
             if (answer == "no") { Environment.Exit(0); }
             Console.WriteLine("Enter record");
             String record = Console.ReadLine();
-            Data dataRecord = new Data(GetVectorsFromLineWithoutType(record));
-            TestRecord(dataRecord, weightVector, t, typeDict);
-            PrintData(dataRecord);
+            Data testData = new Data(GetVectorsFromLineWithoutType(record));
+            perceptron.TestRecord(testData);
+            PrintData(testData);
         } while (answer == "yes");
         
     }
@@ -155,117 +152,6 @@ public class Program
         return returnList;
     }
 
-    private static List<double> AssignRandomValuesToWeightVector(int length)
-    {
-        List<double> weightVector = new List<double>();
-        for (int i = 0; i < length; i++)
-        {
-            weightVector.Add(GetPseudoDoubleWithinRange(-5, 5));
-        }
-
-        return weightVector;
-    }
-
-    private static double GetPseudoDoubleWithinRange(double lowerBound, double upperBound)
-    {
-        var random = new Random();
-        var rDouble = random.NextDouble();
-        var rRangeDouble = rDouble * (upperBound - lowerBound) + lowerBound;
-        return rRangeDouble;
-    }
-
-    private static Dictionary<string, int> CreateTypesDict(List<Data> trainSet)
-    {
-        Dictionary<string, int> returnDict = new Dictionary<string, int>();
-        int value = 0;
-        foreach (var testData in trainSet)
-        {
-            if (testData.CorrectType != null && !returnDict.ContainsKey(testData.CorrectType))
-            {
-                returnDict.Add(testData.CorrectType, value++);
-            }
-        }
-
-        return returnDict;
-    }
-
-    private static void Learn(List<Data> trainSet, double a, List<double> weightVector, double t, Dictionary<string, int> typeDict)
-    {
-        foreach (var trainData in trainSet)
-        {
-            int y = Delta(trainData, weightVector, t, typeDict);
-            int d = 0;
-            
-            foreach (var entry in typeDict)
-            {
-                if (entry.Key == trainData.CorrectType)
-                {
-                    d = entry.Value;
-                }
-            }
-
-            for (int i = 0; i < weightVector.Count; i++)
-            {
-                weightVector[i] +=
-                    (d - y) * a * double.Parse(trainData.Vectors.ElementAt(i), CultureInfo.InvariantCulture);
-            }
-
-            t -= (d - y) * a;
-        }
-    }
-
-    private static void TestList(List<Data> testSet, List<double> weightVector, double t, Dictionary<string, int> typeDict)
-    {
-        foreach (var testData in testSet)
-        {
-            int y = Delta(testData, weightVector, t, typeDict);
-            
-            foreach (var entry in typeDict)
-            {
-                if (entry.Value == y)
-                {
-                    testData.PredictedType = entry.Key;
-                }
-            }
-        }
-    }
-
-    private static void TestRecord(Data data, List<double> weightVector, double t, Dictionary<string, int> typeDict)
-    {
-        int y = Delta(data, weightVector, t, typeDict);
-            
-        foreach (var entry in typeDict)
-        {
-            if (entry.Value == y)
-            {
-                data.PredictedType = entry.Key;
-            }
-        }
-    }
-
-    private static int Delta(Data data, List<double> weightVector, double t, Dictionary<string, int> typeDict)
-    {
-        double net = 0;
-        int y;
-        for (int i = 0; i < data.Vectors.Count; i++)
-        {
-            net += double.Parse(data.Vectors.ElementAt(i), CultureInfo.InvariantCulture) *
-                   weightVector.ElementAt(i);
-        }
-        net -= t;
-
-        if (net < 0)
-        {
-            y = 0;
-        }
-        else
-        {
-            y = 1;
-        }
-
-        return y;
-    }
-    
     private static double CalculateAccuracy(List<Data> testSet)
     {
         double allRecords = testSet.Count;
